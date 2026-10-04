@@ -94,8 +94,10 @@
 ## 🔵 Milestone 3 — Frontend
 
 ### F-1: Setup Next.js + design system
-- [ ] Next.js 15 + TypeScript + Tailwind + shadcn/ui
-- [ ] Layout auth (login/register)
+- [x] Next.js 15 + TypeScript + Tailwind + shadcn/ui
+- [x] Layout auth (login/register)
+- [x] Layout aplikasi: sidebar per role, header, breadcrumb, nav mobile
+- [x] CORS backend diaktifkan (env `CORS_ORIGINS`)
 
 ### F-2: Portal end user
 - [ ] Buat tiket, list "tiket saya"
@@ -111,6 +113,7 @@
 ### F-5: Admin dashboard
 - [ ] Statistik, SLA monitoring
 - [ ] Manajemen user & kategori
+- [ ] Manajemen kategori (backend sudah ada endpointnya)
 
 ---
 
