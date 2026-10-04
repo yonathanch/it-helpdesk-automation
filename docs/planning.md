@@ -39,9 +39,9 @@
 - [x] Migrasi awal + seed data dasar
 
 ### B-3: Auth & RBAC
-- [ ] Register / login (JWT + refresh token)
-- [ ] Role: End User, Agent, Admin
-- [ ] Guard per endpoint berdasarkan role
+- [x] Register / login (JWT + refresh token)
+- [x] Role: End User, Agent, Admin
+- [x] Guard per endpoint berdasarkan role
 
 ### B-4: CRUD Ticket core
 - [ ] Buat tiket (judul, deskripsi, kategori, prioritas)
