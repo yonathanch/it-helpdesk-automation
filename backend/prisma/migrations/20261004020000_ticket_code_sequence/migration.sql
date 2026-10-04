@@ -1,0 +1,1 @@
+CREATE SEQUENCE IF NOT EXISTS ticket_code_seq START 1;

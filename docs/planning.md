@@ -44,10 +44,10 @@
 - [x] Guard per endpoint berdasarkan role
 
 ### B-4: CRUD Ticket core
-- [ ] Buat tiket (judul, deskripsi, kategori, prioritas)
-- [ ] Update status: Open → In Progress → Waiting User → Resolved → Closed
-- [ ] Assign tiket ke agen
-- [ ] List tiket: filter, pagination, sorting
+- [x] Buat tiket (judul, deskripsi, kategori, prioritas)
+- [x] Update status: Open → In Progress → Waiting User → Resolved → Closed
+- [x] Assign tiket ke agen
+- [x] List tiket: filter, pagination, sorting
 
 ### B-5: Ticket conversation & attachment
 - [ ] Komentar internal (agen only) vs publik (terlihat user)
