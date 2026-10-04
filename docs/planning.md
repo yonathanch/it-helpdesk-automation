@@ -54,13 +54,13 @@
 - [x] Upload file/attachment ke MinIO/S3
 
 ### B-6: Category & SLA module
-- [ ] CRUD kategori
-- [ ] Aturan SLA per prioritas, deadline otomatis
-- [ ] Background job cek SLA breach (BullMQ + Redis)
+- [x] CRUD kategori
+- [x] Aturan SLA per prioritas, deadline otomatis
+- [x] Background job cek SLA breach (BullMQ + Redis)
 
 ### B-7: Notifikasi dasar
-- [ ] Email notification (queue via Redis)
-- [ ] In-app notification
+- [x] Email notification (queue via Redis)
+- [x] In-app notification
 
 ---
 

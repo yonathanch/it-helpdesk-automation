@@ -53,6 +53,7 @@ model User {
   attachments      Attachment[]
   articles         KnowledgeArticle[]
   surveys          CSATSurvey[]
+  notifications    Notification[]
 
   @@map("users")
 }
@@ -90,10 +91,11 @@ model Ticket {
   assignee   User? @relation("TicketAssignee", fields: [assigneeId], references: [id])
 
   // SLA
-  slaDueAt     DateTime?
-  firstReplyAt DateTime?
-  resolvedAt   DateTime?
-  closedAt     DateTime?
+  slaDueAt       DateTime?
+  slaBreachedAt  DateTime? // diisi job cek SLA breach
+  firstReplyAt   DateTime?
+  resolvedAt     DateTime?
+  closedAt       DateTime?
 
   // Hasil AI triage (Milestone 2)
   aiTriaged      Boolean   @default(false)
@@ -105,6 +107,7 @@ model Ticket {
 
   messages   TicketMessage[]
   attachments Attachment[]
+  notifications Notification[]
   survey     CSATSurvey?
 
   @@index([status])
@@ -211,4 +214,33 @@ model CSATSurvey {
   createdAt DateTime @default(now())
 
   @@map("csat_surveys")
+}
+
+// ============ Notifikasi (B-7) ============
+
+enum NotificationType {
+  TICKET_CREATED
+  TICKET_ASSIGNED
+  TICKET_STATUS_CHANGED
+  SLA_BREACH
+  GENERAL
+}
+
+model Notification {
+  id     String           @id @default(cuid())
+  type   NotificationType @default(GENERAL)
+  title  String
+  body   String
+  readAt DateTime? // null = belum dibaca
+
+  userId String
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  ticketId String?
+  ticket   Ticket? @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, readAt])
+  @@map("notifications")
 }

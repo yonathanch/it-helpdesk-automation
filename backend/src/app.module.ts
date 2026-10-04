@@ -7,6 +7,10 @@ import { AuthModule } from './auth/auth.module';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import { RolesGuard } from './auth/roles.guard';
 import { PrismaModule } from './prisma/prisma.module';
+import { CategoriesModule } from './categories/categories.module';
+import { NotificationsModule } from './notifications/notifications.module';
+import { SlasModule } from './slas/slas.module';
+import { SlaCheckModule } from './slas/sla-check.module';
 import { StorageModule } from './storage/storage.module';
 import { TicketsModule } from './tickets/tickets.module';
 
@@ -18,8 +22,12 @@ import { TicketsModule } from './tickets/tickets.module';
     }),
     PrismaModule,
     StorageModule,
+    NotificationsModule,
     AuthModule,
     TicketsModule,
+    CategoriesModule,
+    SlasModule,
+    SlaCheckModule,
   ],
   controllers: [AppController],
   providers: [

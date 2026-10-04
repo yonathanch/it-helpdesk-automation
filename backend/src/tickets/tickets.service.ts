@@ -4,9 +4,16 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma, Role, TicketPriority, TicketStatus } from '@prisma/client';
+import {
+  NotificationType,
+  Prisma,
+  Role,
+  TicketPriority,
+  TicketStatus,
+} from '@prisma/client';
 import { randomUUID } from 'crypto';
 import { Readable } from 'stream';
+import { NotificationsService } from '../notifications/notifications.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
 import { CreateMessageDto } from './dto/create-message.dto';
@@ -52,6 +59,7 @@ export class TicketsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly storage: StorageService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   async create(dto: CreateTicketDto, user: AuthUser) {
@@ -83,6 +91,21 @@ export class TicketsService {
         slaDueAt,
       },
       include: TICKET_INCLUDE,
+    });
+
+    // B-7: beri tahu semua agen/admin ada tiket baru
+    await this.notifications.notifyByRole([Role.AGENT, Role.ADMIN], {
+      type: NotificationType.TICKET_CREATED,
+      title: `Tiket baru ${ticket.code}`,
+      body: `${ticket.title} (prioritas ${ticket.priority})`,
+      ticketId: ticket.id,
+    });
+    // konfirmasi ke requester (in-app + email queue)
+    await this.notifications.notify(user.sub, {
+      type: NotificationType.TICKET_CREATED,
+      title: `Tiket ${ticket.code} diterima`,
+      body: 'Tiket kamu sudah masuk ke antrian IT Help Desk.',
+      ticketId: ticket.id,
     });
 
     return ticket;
@@ -190,22 +213,35 @@ export class TicketsService {
       );
     }
 
-    return this.prisma.ticket.update({
-      where: { id },
-      data: {
-        status: dto.status,
-        resolvedAt:
-          dto.status === TicketStatus.RESOLVED
-            ? new Date()
-            : dto.status === TicketStatus.IN_PROGRESS && ticket.resolvedAt
-              ? null // reopen
-              : ticket.resolvedAt,
-        closedAt:
-          dto.status === TicketStatus.CLOSED ? new Date() : ticket.closedAt,
-        firstReplyAt: ticket.firstReplyAt ?? new Date(),
-      },
-      include: TICKET_INCLUDE,
-    });
+    return this.prisma.ticket
+      .update({
+        where: { id },
+        data: {
+          status: dto.status,
+          resolvedAt:
+            dto.status === TicketStatus.RESOLVED
+              ? new Date()
+              : dto.status === TicketStatus.IN_PROGRESS && ticket.resolvedAt
+                ? null // reopen
+                : ticket.resolvedAt,
+          closedAt:
+            dto.status === TicketStatus.CLOSED ? new Date() : ticket.closedAt,
+          firstReplyAt: ticket.firstReplyAt ?? new Date(),
+        },
+        include: TICKET_INCLUDE,
+      })
+      .then(async (updated) => {
+        // B-7: kabari requester (kecuali dialah yang ubah status)
+        if (ticket.requesterId !== user.sub) {
+          await this.notifications.notify(ticket.requesterId, {
+            type: NotificationType.TICKET_STATUS_CHANGED,
+            title: `Tiket ${updated.code}: ${dto.status}`,
+            body: updated.title,
+            ticketId: updated.id,
+          });
+        }
+        return updated;
+      });
   }
 
   async assign(id: string, assigneeId: string, user: AuthUser) {
@@ -227,18 +263,29 @@ export class TicketsService {
       );
     }
 
-    return this.prisma.ticket.update({
-      where: { id },
-      data: {
-        assigneeId,
-        // assign = mulai dikerjakan
-        status:
-          ticket.status === TicketStatus.OPEN
-            ? TicketStatus.IN_PROGRESS
-            : ticket.status,
-      },
-      include: TICKET_INCLUDE,
-    });
+    return this.prisma.ticket
+      .update({
+        where: { id },
+        data: {
+          assigneeId,
+          // assign = mulai dikerjakan
+          status:
+            ticket.status === TicketStatus.OPEN
+              ? TicketStatus.IN_PROGRESS
+              : ticket.status,
+        },
+        include: TICKET_INCLUDE,
+      })
+      .then(async (updated) => {
+        // B-7: beri tahu agen yang ditugaskan
+        await this.notifications.notify(assigneeId, {
+          type: NotificationType.TICKET_ASSIGNED,
+          title: `Tiket ${updated.code} ditugaskan ke kamu`,
+          body: updated.title,
+          ticketId: updated.id,
+        });
+        return updated;
+      });
   }
 
   // ============ B-5: Percakapan & Lampiran ============

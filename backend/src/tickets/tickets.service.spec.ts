@@ -16,6 +16,12 @@ describe('TicketsService', () => {
     download: jest.fn(),
   };
 
+  const notifications = {
+    notify: jest.fn().mockResolvedValue({}),
+    notifyByRole: jest.fn().mockResolvedValue([]),
+    emailQueue: { add: jest.fn().mockResolvedValue({}) },
+  };
+
   const prisma = {
     category: { findUnique: jest.fn() },
     sla: { findUnique: jest.fn() },
@@ -41,7 +47,11 @@ describe('TicketsService', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    service = new TicketsService(prisma as never, storage as never);
+    service = new TicketsService(
+      prisma as never,
+      storage as never,
+      notifications as never,
+    );
   });
 
   describe('create', () => {
