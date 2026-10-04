@@ -15,6 +15,7 @@ import {
 import { randomUUID } from 'crypto';
 import { Readable } from 'stream';
 import { AiService } from '../ai/ai.service';
+import { RoutingService } from '../ai/routing.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
@@ -65,6 +66,7 @@ export class TicketsService {
     private readonly storage: StorageService,
     private readonly notifications: NotificationsService,
     private readonly ai: AiService,
+    private readonly routing: RoutingService,
   ) {}
 
   async create(dto: CreateTicketDto, user: AuthUser) {
@@ -114,11 +116,19 @@ export class TicketsService {
     });
 
     // A-2: AI triage dijalankan di background (queue Redis)
+    // A-6: jika queue down, tetap auto-routing langsung (fallback)
     try {
       await this.ai.enqueueTriage(ticket.id);
     } catch {
       // Redis/queue down tidak boleh menggagalkan pembuatan tiket
       this.logger.warn(`Gagal antrikan triage untuk ${ticket.code}`);
+      try {
+        await this.routing.autoAssign(ticket.id);
+      } catch (err) {
+        this.logger.warn(
+          `Auto-routing fallback gagal: ${err instanceof Error ? err.message : String(err)}`,
+        );
+      }
     }
 
     return ticket;
@@ -409,6 +419,12 @@ export class TicketsService {
       throw new NotFoundException('Tiket tidak ditemukan');
     }
     return ticket;
+  }
+
+  /** A-6: trigger manual auto-routing (untuk uji / re-route agen) */
+  async autoAssign(id: string, user: AuthUser) {
+    this.assertAgentOrAdmin(user, 'Hanya agen/admin yang bisa auto-routing');
+    return this.routing.autoAssign(id, { force: true });
   }
 
   private assertAgentOrAdmin(user: AuthUser, message: string) {

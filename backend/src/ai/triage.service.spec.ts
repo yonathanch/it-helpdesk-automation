@@ -11,6 +11,9 @@ describe('A-2: TriageService', () => {
   };
   const ai = { completeJson: jest.fn() };
   const notifications = { notifyByRole: jest.fn().mockResolvedValue([]) };
+  const routing = {
+    autoAssign: jest.fn().mockResolvedValue({ assigned: true }),
+  };
 
   const baseTicket = {
     id: 't1',
@@ -37,6 +40,7 @@ describe('A-2: TriageService', () => {
       prisma as never,
       ai as never,
       notifications as never,
+      routing as never,
     );
     prisma.category.findMany.mockResolvedValue([
       { slug: 'network', name: 'Network', description: null },
@@ -144,6 +148,23 @@ describe('A-2: TriageService', () => {
     prisma.ticket.findUnique.mockResolvedValue(null);
 
     await expect(service.triage('t-404')).rejects.toThrow(NotFoundException);
+  });
+
+  it('A-6: auto-routing dijalankan setelah triage sukses', async () => {
+    ai.completeJson.mockResolvedValue(result());
+
+    await service.triage('t1');
+
+    expect(routing.autoAssign).toHaveBeenCalledWith('t1');
+  });
+
+  it('A-6: kegagalan auto-routing TIDAK menggagalkan triage', async () => {
+    ai.completeJson.mockResolvedValue(result());
+    routing.autoAssign.mockRejectedValue(new Error('routing down'));
+
+    const out = await service.triage('t1');
+
+    expect(out.updated).toBe(true);
   });
 
   it('LLM error → rethrow supaya retry queue bekerja', async () => {

@@ -102,6 +102,10 @@ model Ticket {
   aiSentiment    String?
   aiConfidence   Float?
 
+  // A-5: draft balasan AI (tersimpan sebelum agen approve/kirim)
+  aiDraft        String?
+  aiDraftAt      DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

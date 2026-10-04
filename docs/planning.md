@@ -79,15 +79,15 @@
 - [x] Endpoint semantic search
 
 ### A-4: Chatbot virtual agent
-- [ ] Endpoint chat dengan jawaban dari RAG
-- [ ] Fallback: tawarkan buat tiket (data chat dipakai untuk prefill)
+- [x] Endpoint chat dengan jawaban dari RAG
+- [x] Fallback: tawarkan buat tiket (data chat dipakai untuk prefill)
 
 ### A-5: Draft reply untuk agen
-- [ ] AI generate draft jawaban per tiket
-- [ ] Agen approve / edit sebelum kirim
+- [x] AI generate draft jawaban per tiket
+- [x] Agen approve / edit sebelum kirim
 
 ### A-6: Auto-routing
-- [ ] Assign tiket otomatis berdasarkan kategori & beban kerja agen
+- [x] Assign tiket otomatis berdasarkan kategori & beban kerja agen
 
 ---
 

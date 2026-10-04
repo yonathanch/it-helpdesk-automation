@@ -26,6 +26,10 @@ describe('TicketsService', () => {
     enqueueTriage: jest.fn().mockResolvedValue(undefined),
   };
 
+  const routing = {
+    autoAssign: jest.fn().mockResolvedValue({ assigned: true }),
+  };
+
   const prisma = {
     category: { findUnique: jest.fn() },
     sla: { findUnique: jest.fn() },
@@ -56,6 +60,7 @@ describe('TicketsService', () => {
       storage as never,
       notifications as never,
       ai as never,
+      routing as never,
     );
   });
 
@@ -87,6 +92,20 @@ describe('TicketsService', () => {
       );
       // A-2: triage di-antrikan setelah tiket dibuat
       expect(ai.enqueueTriage).toHaveBeenCalledWith(expect.any(String));
+      // A-6: queue sukses → routing ditangani worker triage, tidak dobel
+      expect(routing.autoAssign).not.toHaveBeenCalled();
+    });
+
+    it('A-6: queue triage gagal → fallback auto-routing langsung', async () => {
+      prisma.category.findUnique.mockResolvedValue({ id: 'cat-1' });
+      prisma.sla.findUnique.mockResolvedValue({ resolutionMinutes: 480 });
+      prisma.$queryRaw.mockResolvedValue([{ nextval: BigInt(1) }]);
+      prisma.ticket.create.mockResolvedValue({ id: 't1', code: 'HD-0001' });
+      ai.enqueueTriage.mockRejectedValueOnce(new Error('redis down'));
+
+      await service.create(dto, endUser);
+
+      expect(routing.autoAssign).toHaveBeenCalledWith('t1');
     });
 
     it('menolak kategori yang tidak ada', async () => {

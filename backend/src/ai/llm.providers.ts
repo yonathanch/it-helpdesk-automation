@@ -187,6 +187,37 @@ export class MockProvider implements LlmProvider {
       return Promise.resolve('[mock] Jawaban generik dari MockProvider.');
     }
 
+    // ---- A-4: chatbot (prompt punya "Pertanyaan user:") ----
+    if (input.prompt.includes('Pertanyaan user:')) {
+      // hanya baris pertama setelah penanda (jangan ikut instruksi skema JSON)
+      const question =
+        input.prompt.match(/Pertanyaan user:\s*([^\n]*)/)?.[1]?.trim() ?? '';
+      const articleLine = input.prompt.match(/Konteks artikel:\n- ([^\n(]+)/);
+      const articleTitle = articleLine?.[1]?.trim();
+      return Promise.resolve(
+        JSON.stringify({
+          answer: articleTitle
+            ? `Berdasarkan artikel "${articleTitle}": ${question.slice(0, 120)} — ikuti panduan pada artikel tersebut. (jawaban MockProvider)`
+            : 'Maaf, saya belum menemukan jawaban yang cocok.',
+          confident: Boolean(articleTitle),
+        }),
+      );
+    }
+
+    // ---- A-5: draft reply (prompt punya "Tulis draft balasan") ----
+    if (input.prompt.includes('Tulis draft balasan')) {
+      const title =
+        input.prompt.match(/Judul:\s*([^\n]+)/)?.[1]?.trim() ?? 'masalah Anda';
+      return Promise.resolve(
+        JSON.stringify({
+          draft:
+            `Halo, terima kasih sudah menghubungi IT Help Desk terkait "${title}". ` +
+            'Kami sudah menerima laporan Anda dan sedang menindaklanjuti. ' +
+            'Mohon kabari jika ada perkembangan tambahan. (draft MockProvider)',
+        }),
+      );
+    }
+
     // Sinyal sentimen (kata frustasi/marah)
     const negativeSignals = [
       'frustasi',

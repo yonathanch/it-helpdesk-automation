@@ -3,6 +3,7 @@ import { NotificationType, Role, TicketPriority } from '@prisma/client';
 import { NotificationsService } from '../notifications/notifications.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { AiService } from './ai.service';
+import { RoutingService } from './routing.service';
 
 export interface TriageResult {
   categorySlug: string;
@@ -29,6 +30,7 @@ export class TriageService {
     private readonly prisma: PrismaService,
     private readonly ai: AiService,
     private readonly notifications: NotificationsService,
+    private readonly routing: RoutingService,
   ) {}
 
   /**
@@ -144,6 +146,16 @@ export class TriageService {
     this.logger.log(
       `Triage ${ticket.code}: ${notes.join(', ')} (confidence=${result.confidence ?? '?'})`,
     );
+
+    // A-6: auto-routing — tiket sudah punya kategori final, tugaskan ke agen
+    try {
+      await this.routing.autoAssign(ticket.id);
+    } catch (err) {
+      this.logger.warn(
+        `Auto-routing gagal untuk ${ticket.code}: ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
+
     return { updated: true, reason: notes.join(', ') };
   }
 
