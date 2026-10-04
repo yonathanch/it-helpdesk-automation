@@ -22,6 +22,10 @@ describe('TicketsService', () => {
     emailQueue: { add: jest.fn().mockResolvedValue({}) },
   };
 
+  const ai = {
+    enqueueTriage: jest.fn().mockResolvedValue(undefined),
+  };
+
   const prisma = {
     category: { findUnique: jest.fn() },
     sla: { findUnique: jest.fn() },
@@ -51,6 +55,7 @@ describe('TicketsService', () => {
       prisma as never,
       storage as never,
       notifications as never,
+      ai as never,
     );
   });
 
@@ -80,6 +85,8 @@ describe('TicketsService', () => {
           }),
         }),
       );
+      // A-2: triage di-antrikan setelah tiket dibuat
+      expect(ai.enqueueTriage).toHaveBeenCalledWith(expect.any(String));
     });
 
     it('menolak kategori yang tidak ada', async () => {

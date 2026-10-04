@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ForbiddenException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import {
@@ -13,6 +14,7 @@ import {
 } from '@prisma/client';
 import { randomUUID } from 'crypto';
 import { Readable } from 'stream';
+import { AiService } from '../ai/ai.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
@@ -56,10 +58,13 @@ const TICKET_INCLUDE: Prisma.TicketInclude = {
 
 @Injectable()
 export class TicketsService {
+  private readonly logger = new Logger(TicketsService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly storage: StorageService,
     private readonly notifications: NotificationsService,
+    private readonly ai: AiService,
   ) {}
 
   async create(dto: CreateTicketDto, user: AuthUser) {
@@ -107,6 +112,14 @@ export class TicketsService {
       body: 'Tiket kamu sudah masuk ke antrian IT Help Desk.',
       ticketId: ticket.id,
     });
+
+    // A-2: AI triage dijalankan di background (queue Redis)
+    try {
+      await this.ai.enqueueTriage(ticket.id);
+    } catch {
+      // Redis/queue down tidak boleh menggagalkan pembuatan tiket
+      this.logger.warn(`Gagal antrikan triage untuk ${ticket.code}`);
+    }
 
     return ticket;
   }

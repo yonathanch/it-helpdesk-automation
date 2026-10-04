@@ -67,16 +67,16 @@
 ## 🟡 Milestone 2 — AI Automation
 
 ### A-1: AI service layer
-- [ ] Integrasi LLM provider (OpenAI/Claude/Gemini)
-- [ ] Abstraction layer agar mudah ganti provider
+- [x] Integrasi LLM provider (OpenAI/Claude/Gemini)
+- [x] Abstraction layer agar mudah ganti provider
 
 ### A-2: AI Triage pipeline
-- [ ] Klasifikasi otomatis kategori + prioritas saat tiket baru
-- [ ] Sentiment analysis → eskalasi prioritas jika user frustrasi
+- [x] Klasifikasi otomatis kategori + prioritas saat tiket baru
+- [x] Sentiment analysis → eskalasi prioritas jika user frustrasi
 
 ### A-3: RAG Knowledge Base
-- [ ] Embedding artikel → pgvector
-- [ ] Endpoint semantic search
+- [x] Embedding artikel → pgvector
+- [x] Endpoint semantic search
 
 ### A-4: Chatbot virtual agent
 - [ ] Endpoint chat dengan jawaban dari RAG

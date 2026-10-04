@@ -191,6 +191,9 @@ model KnowledgeArticle {
   // Untuk RAG (Milestone 2) — status embedding
   embeddedAt DateTime?
 
+  // pgvector — hanya bisa diakses via raw SQL (Prisma tidak mendukung tipe vector)
+  embedding Unsupported("vector(1536)")?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
