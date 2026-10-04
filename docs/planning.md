@@ -50,8 +50,8 @@
 - [x] List tiket: filter, pagination, sorting
 
 ### B-5: Ticket conversation & attachment
-- [ ] Komentar internal (agen only) vs publik (terlihat user)
-- [ ] Upload file/attachment ke MinIO/S3
+- [x] Komentar internal (agen only) vs publik (terlihat user)
+- [x] Upload file/attachment ke MinIO/S3
 
 ### B-6: Category & SLA module
 - [ ] CRUD kategori

@@ -5,7 +5,11 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Prisma, Role, TicketPriority, TicketStatus } from '@prisma/client';
+import { randomUUID } from 'crypto';
+import { Readable } from 'stream';
 import { PrismaService } from '../prisma/prisma.service';
+import { StorageService } from '../storage/storage.service';
+import { CreateMessageDto } from './dto/create-message.dto';
 import { CreateTicketDto } from './dto/create-ticket.dto';
 import { ListTicketsQueryDto } from './dto/list-tickets.query.dto';
 import { UpdateStatusDto } from './dto/update-status.dto';
@@ -45,7 +49,10 @@ const TICKET_INCLUDE: Prisma.TicketInclude = {
 
 @Injectable()
 export class TicketsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly storage: StorageService,
+  ) {}
 
   async create(dto: CreateTicketDto, user: AuthUser) {
     const category = await this.prisma.category.findUnique({
@@ -136,8 +143,20 @@ export class TicketsService {
       include: {
         ...TICKET_INCLUDE,
         messages: {
+          // END_USER tidak boleh melihat catatan internal agen
+          where: user.role === Role.END_USER ? { isInternal: false } : {},
           include: {
             author: { select: { id: true, name: true, email: true } },
+          },
+          orderBy: { createdAt: 'asc' },
+        },
+        attachments: {
+          select: {
+            id: true,
+            filename: true,
+            mimeType: true,
+            size: true,
+            createdAt: true,
           },
           orderBy: { createdAt: 'asc' },
         },
@@ -220,6 +239,116 @@ export class TicketsService {
       },
       include: TICKET_INCLUDE,
     });
+  }
+
+  // ============ B-5: Percakapan & Lampiran ============
+
+  async addMessage(ticketId: string, dto: CreateMessageDto, user: AuthUser) {
+    const ticket = await this.getTicketWithAccess(ticketId, user);
+
+    const isInternal = dto.isInternal ?? false;
+    if (isInternal && user.role === Role.END_USER) {
+      throw new ForbiddenException(
+        'Catatan internal hanya bisa dibuat agen/admin',
+      );
+    }
+
+    return this.prisma.ticketMessage.create({
+      data: {
+        content: dto.content,
+        isInternal,
+        ticketId: ticket.id,
+        authorId: user.sub,
+      },
+      include: {
+        author: { select: { id: true, name: true, email: true, role: true } },
+      },
+    });
+  }
+
+  async addAttachment(
+    ticketId: string,
+    file: {
+      originalname: string;
+      mimetype: string;
+      size: number;
+      buffer: Buffer;
+    },
+    user: AuthUser,
+  ) {
+    const ticket = await this.getTicketWithAccess(ticketId, user);
+
+    const safeName = file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const key = `tickets/${ticket.id}/${randomUUID()}-${safeName}`;
+    await this.storage.upload(key, file.buffer, file.mimetype);
+
+    return this.prisma.attachment.create({
+      data: {
+        filename: file.originalname,
+        mimeType: file.mimetype,
+        size: file.size,
+        key,
+        ticketId: ticket.id,
+        uploaderId: user.sub,
+      },
+      select: {
+        id: true,
+        filename: true,
+        mimeType: true,
+        size: true,
+        createdAt: true,
+      },
+    });
+  }
+
+  async listAttachments(ticketId: string, user: AuthUser) {
+    await this.getTicketWithAccess(ticketId, user);
+    return this.prisma.attachment.findMany({
+      where: { ticketId },
+      select: {
+        id: true,
+        filename: true,
+        mimeType: true,
+        size: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+  }
+
+  async downloadAttachment(
+    attachmentId: string,
+    user: AuthUser,
+  ): Promise<{ filename: string; mimeType: string; stream: Readable }> {
+    const attachment = await this.prisma.attachment.findUnique({
+      where: { id: attachmentId },
+    });
+    if (!attachment) {
+      throw new NotFoundException('Lampiran tidak ditemukan');
+    }
+
+    await this.getTicketWithAccess(attachment.ticketId!, user);
+    const stream = await this.storage.download(attachment.key);
+
+    return {
+      filename: attachment.filename,
+      mimeType: attachment.mimeType,
+      stream,
+    };
+  }
+
+  /** Ambil tiket + pastikan user boleh mengakses (pemilik / agen / admin) */
+  private async getTicketWithAccess(ticketId: string, user: AuthUser) {
+    const ticket = await this.prisma.ticket.findUnique({
+      where: { id: ticketId },
+    });
+    if (!ticket) {
+      throw new NotFoundException('Tiket tidak ditemukan');
+    }
+    if (user.role === Role.END_USER && ticket.requesterId !== user.sub) {
+      throw new NotFoundException('Tiket tidak ditemukan');
+    }
+    return ticket;
   }
 
   private assertAgentOrAdmin(user: AuthUser, message: string) {
