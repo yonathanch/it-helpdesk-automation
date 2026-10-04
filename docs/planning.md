@@ -34,20 +34,20 @@
 - [x] Setup linter (ESLint + Prettier)
 
 ### B-2: Skema database & migrasi
-- [ ] Setup Prisma ORM
-- [ ] Entitas: User, Role, Ticket, TicketMessage, Attachment, Category, SLA, KnowledgeArticle, CSATSurvey
-- [ ] Migrasi awal + seed data dasar
+- [x] Setup Prisma ORM
+- [x] Entitas: User, Role, Ticket, TicketMessage, Attachment, Category, SLA, KnowledgeArticle, CSATSurvey
+- [x] Migrasi awal + seed data dasar
 
 ### B-3: Auth & RBAC
-- [ ] Register / login (JWT + refresh token)
-- [ ] Role: End User, Agent, Admin
-- [ ] Guard per endpoint berdasarkan role
+- [x] Register / login (JWT + refresh token)
+- [x] Role: End User, Agent, Admin
+- [x] Guard per endpoint berdasarkan role
 
 ### B-4: CRUD Ticket core
-- [ ] Buat tiket (judul, deskripsi, kategori, prioritas)
-- [ ] Update status: Open → In Progress → Waiting User → Resolved → Closed
-- [ ] Assign tiket ke agen
-- [ ] List tiket: filter, pagination, sorting
+- [x] Buat tiket (judul, deskripsi, kategori, prioritas)
+- [x] Update status: Open → In Progress → Waiting User → Resolved → Closed
+- [x] Assign tiket ke agen
+- [x] List tiket: filter, pagination, sorting
 
 ### B-5: Ticket conversation & attachment
 - [ ] Komentar internal (agen only) vs publik (terlihat user)
