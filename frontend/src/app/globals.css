@@ -1,0 +1,183 @@
+@import "tailwindcss";
+
+/* ============================================================
+   Design token — Help Desk AI
+   Palet: netral Slate (permukaan/teks) + Indigo sebagai satu-satunya
+   warna aksen. Status memakai warna semantik yang terbatas.
+   Format warna: <channel> <opacity-value>
+   ============================================================ */
+:root {
+  --radius: 0.5rem;
+
+  --background: oklch(0.985 0.002 265);
+  --foreground: oklch(0.21 0.02 265);
+
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.21 0.02 265);
+
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.21 0.02 265);
+
+  --primary: oklch(0.51 0.19 273);
+  --primary-foreground: oklch(0.99 0.005 270);
+
+  --secondary: oklch(0.96 0.005 265);
+  --secondary-foreground: oklch(0.28 0.02 265);
+
+  --muted: oklch(0.96 0.005 265);
+  --muted-foreground: oklch(0.53 0.017 265);
+
+  --accent: oklch(0.95 0.012 273);
+  --accent-foreground: oklch(0.32 0.05 273);
+
+  --destructive: oklch(0.55 0.21 25);
+  --destructive-foreground: oklch(0.99 0.005 20);
+
+  --border: oklch(0.92 0.006 265);
+  --input: oklch(0.92 0.006 265);
+  --ring: oklch(0.51 0.19 273);
+
+  /* Status tiket — warna dibatasi, selalu Effort/Robot + label teks */
+  --status-open: oklch(0.55 0.16 250);
+  --status-progress: oklch(0.52 0.15 285);
+  --status-waiting: oklch(0.63 0.13 75);
+  --status-resolved: oklch(0.53 0.13 155);
+  --status-closed: oklch(0.55 0.02 265);
+
+  /* Prioritas */
+  --priority-low: oklch(0.55 0.02 265);
+  --priority-medium: oklch(0.58 0.11 220);
+  --priority-high: oklch(0.62 0.15 55);
+  --priority-urgent: oklch(0.55 0.21 25);
+
+  /* Sidebar */
+  --sidebar: oklch(0.22 0.017 268);
+  --sidebar-foreground: oklch(0.93 0.005 265);
+  --sidebar-muted: oklch(0.68 0.014 268);
+  --sidebar-accent: oklch(0.29 0.03 270);
+  --sidebar-border: oklch(0.32 0.02 268);
+}
+
+.dark {
+  --background: oklch(0.17 0.014 268);
+  --foreground: oklch(0.95 0.004 265);
+
+  --card: oklch(0.21 0.016 268);
+  --card-foreground: oklch(0.95 0.004 265);
+
+  --popover: oklch(0.22 0.016 268);
+  --popover-foreground: oklch(0.95 0.004 265);
+
+  --primary: oklch(0.65 0.17 275);
+  --primary-foreground: oklch(0.17 0.02 270);
+
+  --secondary: oklch(0.27 0.017 268);
+  --secondary-foreground: oklch(0.95 0.004 265);
+
+  --muted: oklch(0.27 0.017 268);
+  --muted-foreground: oklch(0.7 0.014 268);
+
+  --accent: oklch(0.3 0.03 272);
+  --accent-foreground: oklch(0.95 0.01 275);
+
+  --destructive: oklch(0.63 0.2 25);
+  --destructive-foreground: oklch(0.98 0.005 20);
+
+  --border: oklch(0.31 0.017 268);
+  --input: oklch(0.33 0.018 268);
+  --ring: oklch(0.65 0.17 275);
+
+  --status-open: oklch(0.7 0.13 250);
+  --status-progress: oklch(0.68 0.13 285);
+  --status-waiting: oklch(0.75 0.12 75);
+  --status-resolved: oklch(0.7 0.12 155);
+  --status-closed: oklch(0.65 0.02 268);
+
+  --priority-low: oklch(0.65 0.02 268);
+  --priority-medium: oklch(0.7 0.1 220);
+  --priority-high: oklch(0.74 0.14 55);
+  --priority-urgent: oklch(0.66 0.19 25);
+
+  --sidebar: oklch(0.2 0.016 268);
+  --sidebar-foreground: oklch(0.93 0.005 265);
+  --sidebar-muted: oklch(0.68 0.014 268);
+  --sidebar-accent: oklch(0.28 0.028 270);
+  --sidebar-border: oklch(0.29 0.02 268);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-muted: var(--sidebar-muted);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-border: var(--sidebar-border);
+
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  --radius-sm: calc(var(--radius) - 2px);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 2px);
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    font-feature-settings: "cv02", "cv03", "cv04";
+  }
+
+  /* Focus ring konsisten & selalu terlihat untuk navigasi keyboard */
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+}
+
+@layer utilities {
+  /* Scrollbar tipis di panel padat (sidebar, tabel) */
+  .scrollbar-slim {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+  .scrollbar-slim::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  .scrollbar-slim::-webkit-scrollbar-thumb {
+    background-color: var(--border);
+    border-radius: 999px;
+  }
+  .scrollbar-slim::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}

@@ -56,7 +56,6 @@ describe('AuthService', () => {
 
       expect(prisma.user.create).toHaveBeenCalledWith(
         expect.objectContaining({
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           data: expect.objectContaining({ role: Role.END_USER }),
         }),
       );

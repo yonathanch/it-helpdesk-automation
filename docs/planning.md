@@ -50,52 +50,54 @@
 - [x] List tiket: filter, pagination, sorting
 
 ### B-5: Ticket conversation & attachment
-- [ ] Komentar internal (agen only) vs publik (terlihat user)
-- [ ] Upload file/attachment ke MinIO/S3
+- [x] Komentar internal (agen only) vs publik (terlihat user)
+- [x] Upload file/attachment ke MinIO/S3
 
 ### B-6: Category & SLA module
-- [ ] CRUD kategori
-- [ ] Aturan SLA per prioritas, deadline otomatis
-- [ ] Background job cek SLA breach (BullMQ + Redis)
+- [x] CRUD kategori
+- [x] Aturan SLA per prioritas, deadline otomatis
+- [x] Background job cek SLA breach (BullMQ + Redis)
 
 ### B-7: Notifikasi dasar
-- [ ] Email notification (queue via Redis)
-- [ ] In-app notification
+- [x] Email notification (queue via Redis)
+- [x] In-app notification
 
 ---
 
 ## 🟡 Milestone 2 — AI Automation
 
 ### A-1: AI service layer
-- [ ] Integrasi LLM provider (OpenAI/Claude/Gemini)
-- [ ] Abstraction layer agar mudah ganti provider
+- [x] Integrasi LLM provider (OpenAI/Claude/Gemini)
+- [x] Abstraction layer agar mudah ganti provider
 
 ### A-2: AI Triage pipeline
-- [ ] Klasifikasi otomatis kategori + prioritas saat tiket baru
-- [ ] Sentiment analysis → eskalasi prioritas jika user frustrasi
+- [x] Klasifikasi otomatis kategori + prioritas saat tiket baru
+- [x] Sentiment analysis → eskalasi prioritas jika user frustrasi
 
 ### A-3: RAG Knowledge Base
-- [ ] Embedding artikel → pgvector
-- [ ] Endpoint semantic search
+- [x] Embedding artikel → pgvector
+- [x] Endpoint semantic search
 
 ### A-4: Chatbot virtual agent
-- [ ] Endpoint chat dengan jawaban dari RAG
-- [ ] Fallback: tawarkan buat tiket (data chat dipakai untuk prefill)
+- [x] Endpoint chat dengan jawaban dari RAG
+- [x] Fallback: tawarkan buat tiket (data chat dipakai untuk prefill)
 
 ### A-5: Draft reply untuk agen
-- [ ] AI generate draft jawaban per tiket
-- [ ] Agen approve / edit sebelum kirim
+- [x] AI generate draft jawaban per tiket
+- [x] Agen approve / edit sebelum kirim
 
 ### A-6: Auto-routing
-- [ ] Assign tiket otomatis berdasarkan kategori & beban kerja agen
+- [x] Assign tiket otomatis berdasarkan kategori & beban kerja agen
 
 ---
 
 ## 🔵 Milestone 3 — Frontend
 
 ### F-1: Setup Next.js + design system
-- [ ] Next.js 15 + TypeScript + Tailwind + shadcn/ui
-- [ ] Layout auth (login/register)
+- [x] Next.js 15 + TypeScript + Tailwind + shadcn/ui
+- [x] Layout auth (login/register)
+- [x] Layout aplikasi: sidebar per role, header, breadcrumb, nav mobile
+- [x] CORS backend diaktifkan (env `CORS_ORIGINS`)
 
 ### F-2: Portal end user
 - [ ] Buat tiket, list "tiket saya"
@@ -111,6 +113,7 @@
 ### F-5: Admin dashboard
 - [ ] Statistik, SLA monitoring
 - [ ] Manajemen user & kategori
+- [ ] Manajemen kategori (backend sudah ada endpointnya)
 
 ---
 
