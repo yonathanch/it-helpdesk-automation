@@ -1,0 +1,253 @@
+// Prisma schema — IT Help Desk AI
+// Dokumentasi: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============ Enum ============
+
+enum Role {
+  ADMIN
+  AGENT
+  END_USER
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  WAITING_USER
+  RESOLVED
+  CLOSED
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+// ============ User & Auth ============
+
+model User {
+  id           String     @id @default(cuid())
+  email        String     @unique
+  passwordHash String
+  name         String
+  role         Role       @default(END_USER)
+  department   String?
+  isActive     Boolean    @default(true)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  // Relasi tiket
+  requestedTickets Ticket[]           @relation("TicketRequester")
+  assignedTickets  Ticket[]           @relation("TicketAssignee")
+  messages         TicketMessage[]
+  attachments      Attachment[]
+  articles         KnowledgeArticle[]
+  surveys          CSATSurvey[]
+  notifications    Notification[]
+
+  @@map("users")
+}
+
+// ============ Ticketing ============
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+
+  tickets   Ticket[]
+  articles  KnowledgeArticle[]
+
+  @@map("categories")
+}
+
+model Ticket {
+  id          String         @id @default(cuid())
+  code        String         @unique // nomor tiket unik, mis. HD-0001
+  title       String
+  description String
+  status      TicketStatus   @default(OPEN)
+  priority    TicketPriority @default(MEDIUM)
+
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
+
+  requesterId String
+  requester   User @relation("TicketRequester", fields: [requesterId], references: [id])
+
+  assigneeId String?
+  assignee   User? @relation("TicketAssignee", fields: [assigneeId], references: [id])
+
+  // SLA
+  slaDueAt       DateTime?
+  slaBreachedAt  DateTime? // diisi job cek SLA breach
+  firstReplyAt   DateTime?
+  resolvedAt     DateTime?
+  closedAt       DateTime?
+
+  // Hasil AI triage (Milestone 2)
+  aiTriaged      Boolean   @default(false)
+  aiSentiment    String?
+  aiConfidence   Float?
+
+  // A-5: draft balasan AI (tersimpan sebelum agen approve/kirim)
+  aiDraft        String?
+  aiDraftAt      DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  messages   TicketMessage[]
+  attachments Attachment[]
+  notifications Notification[]
+  survey     CSATSurvey?
+
+  @@index([status])
+  @@index([assigneeId])
+  @@index([requesterId])
+  @@index([categoryId])
+  @@map("tickets")
+}
+
+model TicketMessage {
+  id         String   @id @default(cuid())
+  content    String
+  isInternal Boolean  @default(false) // true = catatan internal agen
+
+  ticketId String
+  ticket   Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  authorId String
+  author   User @relation(fields: [authorId], references: [id])
+
+  // Jika pesan dihasilkan oleh AI (draft reply)
+  isAiGenerated Boolean @default(false)
+
+  attachments Attachment[]
+
+  createdAt DateTime @default(now())
+
+  @@index([ticketId])
+  @@map("ticket_messages")
+}
+
+model Attachment {
+  id       String   @id @default(cuid())
+  filename String
+  mimeType String
+  size     Int
+  // key objek di MinIO/S3
+  key      String
+
+  ticketId  String?
+  ticket    Ticket?  @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  messageId String?
+  message   TicketMessage? @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  uploaderId String
+  uploader   User @relation(fields: [uploaderId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@map("attachments")
+}
+
+// ============ SLA ============
+
+model Sla {
+  id               String         @id @default(cuid())
+  name             String         @unique
+  priority         TicketPriority @unique // 1 aturan SLA per prioritas
+  responseMinutes  Int // target first reply
+  resolutionMinutes Int // target selesai
+  isActive         Boolean        @default(true)
+
+  @@map("slas")
+}
+
+// ============ Knowledge Base ============
+
+model KnowledgeArticle {
+  id        String   @id @default(cuid())
+  title     String
+  slug      String   @unique
+  content   String // markdown
+  published Boolean  @default(false)
+
+  categoryId String?
+  category   Category? @relation(fields: [categoryId], references: [id])
+
+  authorId String
+  author   User @relation(fields: [authorId], references: [id])
+
+  // Untuk RAG (Milestone 2) — status embedding
+  embeddedAt DateTime?
+
+  // pgvector — hanya bisa diakses via raw SQL (Prisma tidak mendukung tipe vector)
+  embedding Unsupported("vector(1536)")?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([published])
+  @@map("knowledge_articles")
+}
+
+// ============ CSAT ============
+
+model CSATSurvey {
+  id       String  @id @default(cuid())
+  rating   Int // 1–5
+  comment  String?
+
+  ticketId String @unique // 1 tiket = 1 survey
+  ticket   Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@map("csat_surveys")
+}
+
+// ============ Notifikasi (B-7) ============
+
+enum NotificationType {
+  TICKET_CREATED
+  TICKET_ASSIGNED
+  TICKET_STATUS_CHANGED
+  SLA_BREACH
+  GENERAL
+}
+
+model Notification {
+  id     String           @id @default(cuid())
+  type   NotificationType @default(GENERAL)
+  title  String
+  body   String
+  readAt DateTime? // null = belum dibaca
+
+  userId String
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  ticketId String?
+  ticket   Ticket? @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, readAt])
+  @@map("notifications")
+}

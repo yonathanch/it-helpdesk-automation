@@ -34,60 +34,60 @@
 - [x] Setup linter (ESLint + Prettier)
 
 ### B-2: Skema database & migrasi
-- [ ] Setup Prisma ORM
-- [ ] Entitas: User, Role, Ticket, TicketMessage, Attachment, Category, SLA, KnowledgeArticle, CSATSurvey
-- [ ] Migrasi awal + seed data dasar
+- [x] Setup Prisma ORM
+- [x] Entitas: User, Role, Ticket, TicketMessage, Attachment, Category, SLA, KnowledgeArticle, CSATSurvey
+- [x] Migrasi awal + seed data dasar
 
 ### B-3: Auth & RBAC
-- [ ] Register / login (JWT + refresh token)
-- [ ] Role: End User, Agent, Admin
-- [ ] Guard per endpoint berdasarkan role
+- [x] Register / login (JWT + refresh token)
+- [x] Role: End User, Agent, Admin
+- [x] Guard per endpoint berdasarkan role
 
 ### B-4: CRUD Ticket core
-- [ ] Buat tiket (judul, deskripsi, kategori, prioritas)
-- [ ] Update status: Open → In Progress → Waiting User → Resolved → Closed
-- [ ] Assign tiket ke agen
-- [ ] List tiket: filter, pagination, sorting
+- [x] Buat tiket (judul, deskripsi, kategori, prioritas)
+- [x] Update status: Open → In Progress → Waiting User → Resolved → Closed
+- [x] Assign tiket ke agen
+- [x] List tiket: filter, pagination, sorting
 
 ### B-5: Ticket conversation & attachment
-- [ ] Komentar internal (agen only) vs publik (terlihat user)
-- [ ] Upload file/attachment ke MinIO/S3
+- [x] Komentar internal (agen only) vs publik (terlihat user)
+- [x] Upload file/attachment ke MinIO/S3
 
 ### B-6: Category & SLA module
-- [ ] CRUD kategori
-- [ ] Aturan SLA per prioritas, deadline otomatis
-- [ ] Background job cek SLA breach (BullMQ + Redis)
+- [x] CRUD kategori
+- [x] Aturan SLA per prioritas, deadline otomatis
+- [x] Background job cek SLA breach (BullMQ + Redis)
 
 ### B-7: Notifikasi dasar
-- [ ] Email notification (queue via Redis)
-- [ ] In-app notification
+- [x] Email notification (queue via Redis)
+- [x] In-app notification
 
 ---
 
 ## 🟡 Milestone 2 — AI Automation
 
 ### A-1: AI service layer
-- [ ] Integrasi LLM provider (OpenAI/Claude/Gemini)
-- [ ] Abstraction layer agar mudah ganti provider
+- [x] Integrasi LLM provider (OpenAI/Claude/Gemini)
+- [x] Abstraction layer agar mudah ganti provider
 
 ### A-2: AI Triage pipeline
-- [ ] Klasifikasi otomatis kategori + prioritas saat tiket baru
-- [ ] Sentiment analysis → eskalasi prioritas jika user frustrasi
+- [x] Klasifikasi otomatis kategori + prioritas saat tiket baru
+- [x] Sentiment analysis → eskalasi prioritas jika user frustrasi
 
 ### A-3: RAG Knowledge Base
-- [ ] Embedding artikel → pgvector
-- [ ] Endpoint semantic search
+- [x] Embedding artikel → pgvector
+- [x] Endpoint semantic search
 
 ### A-4: Chatbot virtual agent
-- [ ] Endpoint chat dengan jawaban dari RAG
-- [ ] Fallback: tawarkan buat tiket (data chat dipakai untuk prefill)
+- [x] Endpoint chat dengan jawaban dari RAG
+- [x] Fallback: tawarkan buat tiket (data chat dipakai untuk prefill)
 
 ### A-5: Draft reply untuk agen
-- [ ] AI generate draft jawaban per tiket
-- [ ] Agen approve / edit sebelum kirim
+- [x] AI generate draft jawaban per tiket
+- [x] Agen approve / edit sebelum kirim
 
 ### A-6: Auto-routing
-- [ ] Assign tiket otomatis berdasarkan kategori & beban kerja agen
+- [x] Assign tiket otomatis berdasarkan kategori & beban kerja agen
 
 ---
 
