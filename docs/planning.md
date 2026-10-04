@@ -34,9 +34,9 @@
 - [x] Setup linter (ESLint + Prettier)
 
 ### B-2: Skema database & migrasi
-- [ ] Setup Prisma ORM
-- [ ] Entitas: User, Role, Ticket, TicketMessage, Attachment, Category, SLA, KnowledgeArticle, CSATSurvey
-- [ ] Migrasi awal + seed data dasar
+- [x] Setup Prisma ORM
+- [x] Entitas: User, Role, Ticket, TicketMessage, Attachment, Category, SLA, KnowledgeArticle, CSATSurvey
+- [x] Migrasi awal + seed data dasar
 
 ### B-3: Auth & RBAC
 - [ ] Register / login (JWT + refresh token)
