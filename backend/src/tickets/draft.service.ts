@@ -10,6 +10,7 @@ import { KnowledgeService } from '../knowledge/knowledge.service';
 import { AiService } from '../ai/ai.service';
 import { PrismaService } from '../prisma/prisma.service';
 import type { AuthUser } from './tickets.service';
+import { ATTACHMENT_SELECT } from './tickets.service';
 
 export interface DraftResult {
   draft: string;
@@ -157,6 +158,9 @@ export class DraftService {
       },
       include: {
         author: { select: { id: true, name: true, email: true, role: true } },
+        // Selalu sertakan `attachments` (bisa kosong) supaya bentuk pesan
+        // hasil approve sama dengan TicketMessageDto.
+        attachments: { select: ATTACHMENT_SELECT },
       },
     });
 

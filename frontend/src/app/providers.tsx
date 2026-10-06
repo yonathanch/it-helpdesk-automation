@@ -3,12 +3,15 @@
 import * as React from 'react';
 import { AuthProvider } from '@/components/providers/auth-provider';
 import { NotificationsProvider } from '@/components/providers/notifications-provider';
+import { RealtimeProvider } from '@/components/providers/realtime-provider';
 
 /** Pembungkus provider client untuk App Router (harus di file terpisah dari layout server). */
 export function AppProviders({ children }: { children: React.ReactNode }) {
   return (
     <AuthProvider>
-      <NotificationsProvider>{children}</NotificationsProvider>
+      <RealtimeProvider>
+        <NotificationsProvider>{children}</NotificationsProvider>
+      </RealtimeProvider>
     </AuthProvider>
   );
-}
+}

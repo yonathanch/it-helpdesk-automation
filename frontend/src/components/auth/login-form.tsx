@@ -26,7 +26,7 @@ const loginSchema = z.object({
 
 type LoginValues = z.infer<typeof loginSchema>;
 
-export function LoginForm() {
+export function LoginForm({ next = null }: { next?: string | null }) {
   const router = useRouter();
   const { login } = useAuth();
   const [serverError, setServerError] = React.useState<string | null>(null);
@@ -45,7 +45,7 @@ export function LoginForm() {
     setServerError(null);
     try {
       const user = await login(values.email, values.password);
-      router.replace(homeForRole(user.role));
+      router.replace(next ?? homeForRole(user.role));
     } catch (error) {
       const message = toUserMessage(error);
       // Kredensial salah → error di field, bukan banner global.

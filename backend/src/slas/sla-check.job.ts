@@ -9,6 +9,7 @@ import { NotificationType, Role, TicketStatus } from '@prisma/client';
 import { Queue, Worker } from 'bullmq';
 import { NotificationsService } from '../notifications/notifications.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { WebhooksService } from '../webhooks/webhooks.service';
 
 /**
  * Job periodik (tiap 60 detik via Redis/BullMQ):
@@ -24,6 +25,7 @@ export class SlaCheckJob implements OnModuleInit, OnModuleDestroy {
   constructor(
     private readonly prisma: PrismaService,
     private readonly notifications: NotificationsService,
+    private readonly webhooks: WebhooksService,
     config: ConfigService,
   ) {
     const connection = {
@@ -92,6 +94,9 @@ export class SlaCheckJob implements OnModuleInit, OnModuleDestroy {
         });
       }
       this.logger.warn(`SLA BREACH: ${ticket.code} (${ticket.priority})`);
+
+      // M4-2: webhook kanal eksternal
+      await this.webhooks.slaBreached(ticket);
     }
 
     return { breached: tickets.length };

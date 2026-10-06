@@ -49,6 +49,72 @@ services:
       timeout: 5s
       retries: 5
 
+# ============================================================
+  # Aplikasi (M4-1) — aktif dengan profile "app" agar TIDAK ikut
+  # jalan saat hanya butuh infrastruktur:
+  #     docker compose --profile app up -d --build
+  # ============================================================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: helpdesk-backend
+    restart: unless-stopped
+    profiles: ["app"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      DATABASE_URL: postgresql://helpdesk:helpdesk@postgres:5432/helpdesk
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      MINIO_ENDPOINT: minio
+      MINIO_PORT: "9000"
+      MINIO_USE_SSL: "false"
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin123
+      # Ganti nilai ini di lingkungan produksi.
+      JWT_SECRET: ${JWT_SECRET:-ubah-secret-ini-di-produksi}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-ubah-refresh-secret-ini}
+      JWT_EXPIRES_IN: 15m
+      JWT_REFRESH_EXPIRES_IN: 7d
+      LLM_PROVIDER: ${LLM_PROVIDER:-mock}
+      LLM_API_KEY: ${LLM_API_KEY:-}
+      EMBEDDING_PROVIDER: ${EMBEDDING_PROVIDER:-mock}
+      EMBEDDING_API_KEY: ${EMBEDDING_API_KEY:-}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3001}
+      # M4-2 webhook — kosong berarti kanal dimatikan.
+      WEBHOOK_SLACK_URL: ${WEBHOOK_SLACK_URL:-}
+      WEBHOOK_TEAMS_URL: ${WEBHOOK_TEAMS_URL:-}
+      WEBHOOK_WHATSAPP_URL: ${WEBHOOK_WHATSAPP_URL:-}
+      WHATSAPP_TO: ${WHATSAPP_TO:-}
+      SWAGGER_ENABLED: ${SWAGGER_ENABLED:-false}
+    ports:
+      - "3000:3000"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3000}
+    container_name: helpdesk-frontend
+    restart: unless-stopped
+    profiles: ["app"]
+    depends_on:
+      - backend
+    environment:
+      NODE_ENV: production
+      PORT: "3001"
+    ports:
+      - "3001:3001"
+
 volumes:
   pgdata:
   redisdata:

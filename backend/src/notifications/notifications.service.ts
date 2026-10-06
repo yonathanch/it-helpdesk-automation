@@ -98,7 +98,7 @@ export class NotificationsService {
       orderBy: { createdAt: 'desc' },
       take: 50,
       include: {
-        ticket: { select: { id: true, code: true, title: true } },
+        ticket: { select: { id: true, code: true, title: true, status: true, priority: true } },
       },
     });
   }

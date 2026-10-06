@@ -62,10 +62,18 @@ export function StatusBadge({
   status: TicketStatus;
   className?: string;
 }) {
+  const label = STATUS_LABEL[status];
+  const tone = STATUS_TONE[status];
   return (
-    <span className={cn('contents', className)}>
-      <span className="sr-only">Status tiket: </span>
-      <ToneBadge tone={STATUS_TONE[status]} label={STATUS_LABEL[status]} />
+    <span
+      className={cn(
+        'inline-flex items-center justify-center whitespace-nowrap rounded-md px-2 py-0.5 text-[11px] font-medium leading-5 min-w-[100px] text-center',
+        className,
+      )}
+      style={{ backgroundColor: tone, color: 'white' }}
+      title={label}
+    >
+      {label}
     </span>
   );
 }
@@ -77,13 +85,22 @@ export function PriorityBadge({
   priority: TicketPriority;
   className?: string;
 }) {
+  const label = PRIORITY_LABEL[priority];
+  const tone = PRIORITY_TONE[priority];
   return (
-    <span className={cn('contents', className)}>
-      <span className="sr-only">Prioritas: </span>
-      <ToneBadge tone={PRIORITY_TONE[priority]} label={PRIORITY_LABEL[priority]} />
+    <span
+      className={cn(
+        'inline-flex items-center justify-center whitespace-nowrap rounded-md border px-2 py-0.5 text-[11px] font-medium leading-5 min-w-[80px] text-center',
+        className,
+      )}
+      style={{ borderColor: tone, color: tone }}
+      title={label}
+    >
+      {label}
     </span>
   );
 }
+
 
 function Badge({ className, ...props }: BadgeProps) {
   return <span className={cn(badgeVariants(), className)} {...props} />;

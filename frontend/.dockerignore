@@ -1,0 +1,30 @@
+# Dependensi & build output
+node_modules
+.next
+out
+build
+coverage
+
+# Variabel lingkungan lokal
+.env
+.env.*
+!.env.example
+
+# Log & cache
+*.log
+.eslintcache
+
+# Git & editor
+.git
+.gitignore
+.vscode
+.idea
+
+# Docker & dokumen
+Dockerfile
+.dockerignore
+README.md
+
+# OS
+.DS_Store
+Thumbs.db

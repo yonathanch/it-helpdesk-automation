@@ -1,7 +1,13 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  /**
+   * Menghasilkan server.js mandiri di .next/standalone.
+   * Ini yang dipakai Dockerfile agar image produksi tidak ikut
+   * membawa seluruh node_modules.
+   */
+  output: 'standalone',
+  reactStrictMode: true,
 };
 
-export default nextConfig;
+export default nextConfig;

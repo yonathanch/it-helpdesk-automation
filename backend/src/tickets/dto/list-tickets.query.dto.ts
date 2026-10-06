@@ -52,4 +52,14 @@ export class ListTicketsQueryDto {
   @IsOptional()
   @IsIn(['all', 'mine', 'unassigned'])
   scope?: 'all' | 'mine' | 'unassigned' = 'all';
+
+  /** Filter tiket dibuat mulai tanggal (ISO 8601 date string, e.g. 2024-01-15) */
+  @IsOptional()
+  @IsString()
+  dateFrom?: string;
+
+  /** Filter tiket dibuat sampai tanggal (ISO 8601 date string, e.g. 2024-12-31) */
+  @IsOptional()
+  @IsString()
+  dateTo?: string;
 }

@@ -1,0 +1,35 @@
+# Dependensi & build output — di-install di dalam image
+node_modules
+dist
+build
+coverage
+
+# Variabel lingkungan lokal (tidak boleh bocor ke image)
+.env
+.env.*
+!.env.example
+
+# Log & cache
+*.log
+.npm
+.eslintcache
+
+# Testing & tooling
+**/*.spec.ts
+.jest
+test
+
+# Git & editor
+.git
+.gitignore
+.vscode
+.idea
+
+# Docker & dokumen
+Dockerfile
+.dockerignore
+README.md
+
+# OS
+.DS_Store
+Thumbs.db

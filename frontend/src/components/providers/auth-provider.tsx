@@ -9,7 +9,7 @@ import type { Role, SessionUser } from '@/lib/types';
 
 interface AuthContextValue {
   user: SessionUser | null;
-  /** true saatstatus sesi masih dicek dari storage/server */
+  /** true saat status sesi masih dicek dari storage/server */
   initializing: boolean;
   login: (email: string, password: string) => Promise<SessionUser>;
   register: (input: {
@@ -19,7 +19,7 @@ interface AuthContextValue {
     department?: string;
   }) => Promise<SessionUser>;
   logout: () => void;
-  /** Helper role untuk menyembunyikan kontrol UI (otorisasi tetap di backend). */
+  /** Helper role untuk menyesuaikan kontrol UI (otorisasi tetap ditegakkan backend). */
   can: {
     staff: boolean;
     admin: boolean;

@@ -53,6 +53,21 @@ describe('TicketsService', () => {
   const agent = { sub: 'agent-1', email: 'a@x.com', role: Role.AGENT };
   const endUser = { sub: 'user-1', email: 'u@x.com', role: Role.END_USER };
 
+  // M4-2: webhook kanal eksternal
+  const webhooks = {
+    ticketCreated: jest.fn().mockResolvedValue(undefined),
+    ticketAssigned: jest.fn().mockResolvedValue(undefined),
+    ticketStatusChanged: jest.fn().mockResolvedValue(undefined),
+    slaBreached: jest.fn().mockResolvedValue(undefined),
+  };
+
+  // M4-4: realtime WebSocket
+  const realtime = {
+    emitToTicket: jest.fn(),
+    emitToAgents: jest.fn(),
+    emitToUser: jest.fn(),
+  };
+
   beforeEach(() => {
     jest.clearAllMocks();
     service = new TicketsService(
@@ -61,6 +76,8 @@ describe('TicketsService', () => {
       notifications as never,
       ai as never,
       routing as never,
+      webhooks as never,
+      realtime as never,
     );
   });
 
@@ -306,6 +323,23 @@ describe('TicketsService', () => {
           }),
         }),
       );
+    });
+
+    it('selalu menyertakan field attachments (bisa kosong) di pesan', async () => {
+      // Tanpa ini, UI gagal saat membaca `message.attachments.length`
+      // pada pesan hasil approve draft / kiriman baru.
+      prisma.ticket.findUnique.mockResolvedValue({ id: 't1' });
+      prisma.ticketMessage.create.mockResolvedValue({ id: 'm1' });
+
+      await service.addMessage('t1', { content: 'halo' }, agent);
+
+      const call = prisma.ticketMessage.create.mock.calls[0][0];
+      expect(call.include).toHaveProperty('attachments');
+      expect(call.include.attachments.select).toEqual(
+        expect.objectContaining({ id: true, filename: true, mimeType: true }),
+      );
+      // `key` (path objek storage) tidak boleh keluar ke klien.
+      expect(call.include.attachments.select).not.toHaveProperty('key');
     });
   });
 

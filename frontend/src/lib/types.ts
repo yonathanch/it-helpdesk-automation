@@ -33,13 +33,21 @@ export const NOTIFICATION_TYPES = [
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
-/** Transisi status yang diizinkan backend (tickets.service ALLOWED_TRANSITIONS) */
+/**
+ * Transisi status yang diizinkan backend.
+ *
+ * WAJIB identik dengan `ALLOWED_TRANSITIONS` di
+ * backend/src/tickets/tickets.service.ts. Kalau berbeda, UI akan menawarkan
+ * perpindahan yang server tolak dengan 400.
+ */
 export const ALLOWED_TRANSITIONS: Record<TicketStatus, TicketStatus[]> = {
-  OPEN: ['IN_PROGRESS', 'RESOLVED', 'CLOSED'],
-  IN_PROGRESS: ['WAITING_USER', 'RESOLVED', 'CLOSED'],
+  OPEN: ['IN_PROGRESS', 'WAITING_USER', 'CLOSED'],
+  IN_PROGRESS: ['OPEN', 'WAITING_USER', 'RESOLVED'],
   WAITING_USER: ['IN_PROGRESS', 'RESOLVED', 'CLOSED'],
+  // RESOLVED → IN_PROGRESS = reopen
   RESOLVED: ['CLOSED', 'IN_PROGRESS'],
-  CLOSED: ['IN_PROGRESS'],
+  // CLOSED bersifat final
+  CLOSED: [],
 };
 
 // ========================= Users & Auth =========================
@@ -64,6 +72,42 @@ export interface AuthResponse {
 export interface MeResponse extends SessionUser {
   isActive: boolean;
   createdAt: string;
+}
+
+// ========================= Users (admin) =========================
+
+/** Data pengguna untuk halaman administrasi — tanpa passwordHash. */
+export interface AdminUser {
+  id: string;
+  name: string;
+  email: string;
+  role: Role;
+  department: string | null;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Pilihan agen untuk penugasan tiket (GET /users/agents). */
+export interface AgentOption {
+  id: string;
+  name: string;
+  email: string;
+  role: Extract<Role, 'ADMIN' | 'AGENT'>;
+  /** Jumlah tiket belum selesai yang sedang ditangani. */
+  activeTickets: number;
+}
+
+/** Query yang valid untuk GET /users (harus sesuai ListUsersQueryDto). */
+export interface UserListQuery {
+  page?: number;
+  limit?: number;
+  role?: Role;
+  /** Dikirim sebagai string karena backend membacanya dari query string. */
+  isActive?: 'true' | 'false';
+  search?: string;
+  sortBy?: 'name' | 'email' | 'createdAt' | 'role';
+  sortOrder?: 'asc' | 'desc';
 }
 
 // ========================= Categories =========================
@@ -135,7 +179,8 @@ export interface TicketMessage {
   authorId: string;
   author: TicketUserRef & { role?: Role };
   isAiGenerated: boolean;
-  attachments: Attachment[];
+  /** Selalu dikirim backend (bisa kosong array). Opsional agar UI tahan data lama. */
+  attachments?: Attachment[];
   createdAt: string;
 }
 
@@ -195,6 +240,10 @@ export interface TicketListQuery {
   scope?: TicketScope;
   sortBy?: TicketSortBy;
   sortOrder?: 'asc' | 'desc';
+  /** Filter: tiket dibuat mulai tanggal (YYYY-MM-DD). Backend: ListTicketsQueryDto.dateFrom. */
+  dateFrom?: string;
+  /** Filter: tiket dibuat sampai tanggal (YYYY-MM-DD). Backend: ListTicketsQueryDto.dateTo. */
+  dateTo?: string;
 }
 
 // ========================= Knowledge Base =========================
@@ -233,7 +282,7 @@ export interface AppNotification {
   body: string;
   readAt: string | null;
   ticketId: string | null;
-  ticket: { id: string; code: string; title: string } | null;
+  ticket: { id: string; code: string; title: string; status: TicketStatus; priority: TicketPriority } | null;
   createdAt: string;
 }
 

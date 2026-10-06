@@ -100,30 +100,62 @@
 - [x] CORS backend diaktifkan (env `CORS_ORIGINS`)
 
 ### F-2: Portal end user
-- [ ] Buat tiket, list "tiket saya"
-- [ ] Chat dengan AI bot
+- [x] Buat tiket, list "tiket saya"
+- [x] Detail tiket: deskripsi, percakapan, lampiran, ringkasan SLA
+- [x] Chat dengan AI bot (+ prefill otomatis ke form tiket)
+- [x] Survei kepuasan (CSAT) untuk pelapor tiket yang sudah selesai
 
 ### F-3: Dashboard agen
-- [ ] Inbox tiket, reply, internal note
-- [ ] Ubah status & assign
+- [x] Inbox tiket dengan pencarian, filter, sort, dan paginasi
+- [x] Balasan publik + catatan internal
+- [x] Ubah status (mengikuti aturan transisi backend) & assign otomatis
+- [x] Panel draf balasan AI: buat, sunting, setujui, atau buang
 
 ### F-4: Knowledge base UI
-- [ ] Search artikel + CRUD artikel
+- [x] Pencarian semantik dengan skor kemiripan
+- [x] Daftar & detail artikel (versi draf hanya untuk agen/admin)
+- [x] CRUD artikel + rebuild embedding (admin)
 
 ### F-5: Admin dashboard
-- [ ] Statistik, SLA monitoring
-- [ ] Manajemen user & kategori
-- [ ] Manajemen kategori (backend sudah ada endpointnya)
+- [x] Statistik: total, MTTR, kepatuhan SLA, CSAT, tren harian
+- [x] Beban per kategori & daftar tiket berisiko SLA
+- [x] Tombol unduh 4 laporan CSV
+- [x] Manajemen target SLA per prioritas
+- [x] Manajemen kategori
 
 ---
 
 ## 🟣 Milestone 4 — Polish & Integrasi
 
-- [ ] **Reporting & export** — MTTR, SLA compliance, CSAT
-- [ ] **Integrasi Slack/Teams/WhatsApp** — webhook notifikasi
-- [ ] **Realtime update** — WebSocket untuk status tiket & chat live
-- [ ] **Testing E2E + Swagger** — dokumentasi API
-- [ ] **Deployment CI/CD** — GitHub Actions + Docker
+- [x] **Reporting & export** — MTTR, SLA compliance, CSAT
+  - [x] `GET /reporting/overview|trend|categories|sla-at-risk` (ADMIN)
+  - [x] CSAT: `POST /surveys/tickets/:id` (pelapor saja) + `GET /surveys` (ADMIN)
+  - [x] Ekspor CSV: `GET /reporting/export/{tickets|overview|sla-at-risk|csat}.csv` (proteksi CSV injection + BOM UTF-8)
+- [x] **Integrasi Slack/Teams/WhatsApp** — webhook notifikasi
+  - [x] Service + BullMQ worker, format Slack/Teams/WhatsApp, retry 3x backoff
+  - [x] Hook: tiket dibuat, ditugaskan, status berubah, SLA breach
+- [x] **Realtime update** — WebSocket untuk status tiket & chat live
+  - [x] Gateway `/realtime` (JWT auth), room `ticket:<id>` + `agents`
+  - [x] Event: `message`, `ticket_updated`, `ticket_created`, notifikasi
+  - [x] Klien Socket.IO di frontend: inbox & detail tiket ikut berubah tanpa muat ulang
+- [x] **Manajemen pengguna** — admin mengelola akun tanpa menyentuh database
+  - [x] `GET /users` (ADMIN) — filter peran/status, pencarian, sort, paginasi
+  - [x] `POST /users` (ADMIN) — satu-satunya jalur membuat akun AGENT/ADMIN
+  - [x] `PATCH /users/:id` (ADMIN) — ubah nama/departemen/peran, aktif/nonaktif
+  - [x] `GET /users/agents` (AGENT/ADMIN) — daftar agen + beban tiket aktif
+  - [x] Pengaman anti-kunci: admin aktif terakhir tidak bisa diturunkan/dinonaktifkan, tidak bisa mengubah peran/menonaktifkan akun sendiri, `passwordHash` tidak pernah dikirim ke klien
+  - [x] Panel UI di dashboard admin: tabel, filter, form buat, ubah peran, aktif/nonaktif + konfirmasi
+- [x] **Penugasan tiket dari UI** — agen memilih penanggung jawab langsung dari detail tiket
+  - [x] Dropdown "Tugaskan ke agen" (menampilkan beban tiket tiap agen) memakai `PATCH /tickets/:id/assign`
+- [x] **Testing E2E + Swagger** — dokumentasi API
+  - [x] Swagger UI (`/docs`) + OpenAPI JSON (`/docs-json`), 46 operasi, 36 schema
+  - [x] E2E end-to-end: [`backend/scripts/e2e.mjs`](../backend/scripts/e2e.mjs) — 99 pemeriksaan, 14 bagian (auth → tiket → AI → SLA → CSAT → ekspor CSV → manajemen pengguna → penugasan)
+  - [x] Smoke test WebSocket: [`backend/scripts/ws-smoke.mjs`](../backend/scripts/ws-smoke.mjs) — membuat tiket sendiri bila belum ada tiket OPEN
+- [x] **Deployment CI/CD** — GitHub Actions + Docker
+  - [x] `backend/Dockerfile`, `frontend/Dockerfile` (multi-stage, non-root, healthcheck)
+  - [x] `.github/workflows/ci.yml` (lint + typecheck + test + build + docker smoke)
+  - [x] Job `e2e`: PostgreSQL+Redis sebagai service, migrasi + seed, jalankan backend lalu E2E + smoke WebSocket
+  - [x] Service `backend` & `frontend` di `docker-compose.yml` (profile `app`)
 
 ---
 

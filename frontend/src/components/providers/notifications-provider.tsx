@@ -3,6 +3,7 @@
 import * as React from 'react';
 import * as notificationsService from '@/lib/services/meta.service';
 import { useAuth } from './auth-provider';
+import { useRealtimeSubscription } from './realtime-provider';
 
 interface NotificationsContextValue {
   unreadCount: number;
@@ -57,6 +58,14 @@ export function NotificationsProvider({
     const timer = setInterval(tick, POLL_INTERVAL);
     return () => clearInterval(timer);
   }, [user, refresh]);
+
+  // Realtime membuat angka lonceng langsung berubah — tanpa menunggu polling.
+  useRealtimeSubscription('notification', () => {
+    void refresh();
+  });
+  useRealtimeSubscription('ticket_created', () => {
+    void refresh();
+  });
 
   const markRead = React.useCallback(
     async (id: string) => {

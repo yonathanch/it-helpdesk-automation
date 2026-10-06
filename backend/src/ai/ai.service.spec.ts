@@ -2,6 +2,18 @@ import { ConfigService } from '@nestjs/config';
 import { AiService } from './ai.service';
 import { createLlmProvider, MockProvider } from './llm.providers';
 
+/**
+ * Mock antrean BullMQ supaya unit test tidak membuka koneksi Redis sungguhan.
+ * Koneksi nyata akan terus hidup dan membuat Jest tidak pernah keluar
+ * (menggantung sampai timeout di CI).
+ */
+jest.mock('bullmq', () => ({
+  Queue: jest.fn().mockImplementation(() => ({
+    add: jest.fn().mockResolvedValue({ id: 'job-1' }),
+    close: jest.fn().mockResolvedValue(undefined),
+  })),
+}));
+
 describe('A-1: AI service layer', () => {
   const makeConfig = (overrides: Record<string, string> = {}) =>
     ({

@@ -17,6 +17,8 @@ import { Readable } from 'stream';
 import { AiService } from '../ai/ai.service';
 import { RoutingService } from '../ai/routing.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { WebhooksService } from '../webhooks/webhooks.service';
+import { RealtimeGateway } from '../realtime/realtime.gateway';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
 import { CreateMessageDto } from './dto/create-message.dto';
@@ -57,6 +59,20 @@ const TICKET_INCLUDE: Prisma.TicketInclude = {
   assignee: { select: { id: true, name: true, email: true } },
 };
 
+/**
+ * Kolom lampiran yang dikembalikan ke klien.
+ *
+ * Sengaja TIDAK memuat `key` (jalur objek di MinIO/S3) — path internal
+ * tidak perlu diketahui frontend.
+ */
+export const ATTACHMENT_SELECT = {
+  id: true,
+  filename: true,
+  mimeType: true,
+  size: true,
+  createdAt: true,
+} as const;
+
 @Injectable()
 export class TicketsService {
   private readonly logger = new Logger(TicketsService.name);
@@ -67,6 +83,8 @@ export class TicketsService {
     private readonly notifications: NotificationsService,
     private readonly ai: AiService,
     private readonly routing: RoutingService,
+    private readonly webhooks: WebhooksService,
+    private readonly realtime: RealtimeGateway,
   ) {}
 
   async create(dto: CreateTicketDto, user: AuthUser) {
@@ -107,6 +125,13 @@ export class TicketsService {
       body: `${ticket.title} (prioritas ${ticket.priority})`,
       ticketId: ticket.id,
     });
+
+    // M4-2: teruskan ke kanal eksternal (Slack/Teams/WhatsApp) bila dikonfigurasi
+    await this.webhooks.ticketCreated(ticket);
+
+    // M4-4: realtime — kabari antrean agen
+    this.realtime.emitToAgents('ticket_created', ticket);
+
     // konfirmasi ke requester (in-app + email queue)
     await this.notifications.notify(user.sub, {
       type: NotificationType.TICKET_CREATED,
@@ -155,6 +180,18 @@ export class TicketsService {
         { code: { contains: query.search, mode: 'insensitive' } },
       ];
     }
+    if (query.dateFrom || query.dateTo) {
+      where.createdAt = {};
+      if (query.dateFrom) {
+        where.createdAt.gte = new Date(query.dateFrom);
+      }
+      if (query.dateTo) {
+        // Include the entire day by setting to 23:59:59.999
+        const endDate = new Date(query.dateTo);
+        endDate.setHours(23, 59, 59, 999);
+        where.createdAt.lte = endDate;
+      }
+    }
 
     const page = query.page ?? 1;
     const limit = query.limit ?? 20;
@@ -193,17 +230,12 @@ export class TicketsService {
           where: user.role === Role.END_USER ? { isInternal: false } : {},
           include: {
             author: { select: { id: true, name: true, email: true } },
+            attachments: { select: ATTACHMENT_SELECT },
           },
           orderBy: { createdAt: 'asc' },
         },
         attachments: {
-          select: {
-            id: true,
-            filename: true,
-            mimeType: true,
-            size: true,
-            createdAt: true,
-          },
+          select: ATTACHMENT_SELECT,
           orderBy: { createdAt: 'asc' },
         },
       },
@@ -263,6 +295,11 @@ export class TicketsService {
             ticketId: updated.id,
           });
         }
+        // M4-2: webhook kanal eksternal
+        await this.webhooks.ticketStatusChanged(updated);
+        // M4-4: realtime — perubahan status langsung tampil di UI
+        this.realtime.emitToTicket(updated.id, 'ticket_updated', updated);
+        this.realtime.emitToAgents('ticket_updated', updated);
         return updated;
       });
   }
@@ -307,6 +344,15 @@ export class TicketsService {
           body: updated.title,
           ticketId: updated.id,
         });
+        // M4-2: webhook kanal eksternal
+        const assignee = await this.prisma.user.findUnique({
+          where: { id: assigneeId },
+          select: { name: true },
+        });
+        await this.webhooks.ticketAssigned(updated, assignee?.name ?? 'agen');
+        // M4-4: realtime — kabari room tiket & antrean
+        this.realtime.emitToTicket(updated.id, 'ticket_updated', updated);
+        this.realtime.emitToAgents('ticket_updated', updated);
         return updated;
       });
   }
@@ -323,17 +369,28 @@ export class TicketsService {
       );
     }
 
-    return this.prisma.ticketMessage.create({
-      data: {
-        content: dto.content,
-        isInternal,
-        ticketId: ticket.id,
-        authorId: user.sub,
-      },
-      include: {
-        author: { select: { id: true, name: true, email: true, role: true } },
-      },
-    });
+    return this.prisma.ticketMessage
+      .create({
+        data: {
+          content: dto.content,
+          isInternal,
+          ticketId: ticket.id,
+          authorId: user.sub,
+        },
+        include: {
+          author: { select: { id: true, name: true, email: true, role: true } },
+          // `attachments` selalu dikembalikan (bisa kosong) agar bentuk
+          // pesan sama persis dengan TicketMessageDto dan detail tiket.
+          attachments: { select: ATTACHMENT_SELECT },
+        },
+      })
+      .then((message) => {
+        // M4-4: broadcast pesan real-time ke watcher tiket.
+        // Catatan internal tetap ikut, tetapi hanya sampai watcher yang
+        // memang sudah punya akses (UI agen).
+        this.realtime.emitToTicket(ticket.id, 'message', message);
+        return message;
+      });
   }
 
   async addAttachment(
@@ -361,13 +418,7 @@ export class TicketsService {
         ticketId: ticket.id,
         uploaderId: user.sub,
       },
-      select: {
-        id: true,
-        filename: true,
-        mimeType: true,
-        size: true,
-        createdAt: true,
-      },
+      select: ATTACHMENT_SELECT,
     });
   }
 
@@ -375,13 +426,7 @@ export class TicketsService {
     await this.getTicketWithAccess(ticketId, user);
     return this.prisma.attachment.findMany({
       where: { ticketId },
-      select: {
-        id: true,
-        filename: true,
-        mimeType: true,
-        size: true,
-        createdAt: true,
-      },
+      select: ATTACHMENT_SELECT,
       orderBy: { createdAt: 'asc' },
     });
   }

@@ -171,6 +171,22 @@ describe('A-5: DraftService', () => {
         ForbiddenException,
       );
     });
+
+    it('pesan hasil approve menyertakan field attachments', async () => {
+      // UI membaca `message.attachments` — kalau tidak dikirim, halaman
+      // detail tiket akan crash tepat setelah agen menyetujui draf.
+      prisma.ticket.findUnique.mockResolvedValue({
+        ...ticket,
+        aiDraft: 'Draft tersimpan',
+      });
+      prisma.ticketMessage.create.mockResolvedValue({ id: 'm9' });
+
+      await service.approve('t1', undefined, agent);
+
+      const call = prisma.ticketMessage.create.mock.calls[0][0];
+      expect(call.include).toHaveProperty('attachments');
+      expect(call.include.attachments.select).not.toHaveProperty('key');
+    });
   });
 
   describe('discard', () => {

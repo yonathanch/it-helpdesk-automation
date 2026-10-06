@@ -63,15 +63,18 @@ export function autoAssign(id: string) {
 export function addMessage(id: string, content: string, isInternal = false) {
   const body: Record<string, string | boolean> = { content };
   if (isInternal) body.isInternal = true;
-  // Backend mengembalikan TicketDetail (termasuk messages terbaru).
-  return api.post<TicketDetail>(`/tickets/${id}/messages`, body);
+  // Backend mengembalikan objek TicketMessage yang baru dibuat (bukan detail
+  // tiket), jadi pemanggil yang responsible menggabungkannya ke state.
+  return api.post<TicketMessage>(`/tickets/${id}/messages`, body);
 }
 
 /** POST /tickets/:id/attachments — multipart field "file" */
 export function uploadAttachment(id: string, file: File) {
   const form = new FormData();
   form.append('file', file);
-  return api.upload<TicketDetail>(`/tickets/${id}/attachments`, form);
+  // Backend mengembalikan objek Attachment yang baru dibuat, bukan detail
+  // tiket — pemanggil yang responsible menambahkannya ke state.
+  return api.upload<Attachment>(`/tickets/${id}/attachments`, form);
 }
 
 /** GET /tickets/:id/attachments */

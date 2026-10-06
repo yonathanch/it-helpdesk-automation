@@ -2,6 +2,22 @@ import { ConfigService } from '@nestjs/config';
 import { NotificationType, TicketStatus } from '@prisma/client';
 import { SlaCheckJob } from './sla-check.job';
 
+/**
+ * Mock Queue/Worker BullMQ supaya unit test tidak membuka koneksi Redis
+ * sungguhan (koneksi nyata membuat Jest menggantung dan tidak keluar di CI).
+ * Yang diuji di sini adalah logika runCheck, bukan perilaku antrean.
+ */
+jest.mock('bullmq', () => ({
+  Queue: jest.fn().mockImplementation(() => ({
+    upsertJobScheduler: jest.fn().mockResolvedValue(undefined),
+    close: jest.fn().mockResolvedValue(undefined),
+  })),
+  Worker: jest.fn().mockImplementation(() => ({
+    on: jest.fn(),
+    close: jest.fn().mockResolvedValue(undefined),
+  })),
+}));
+
 describe('SlaCheckJob', () => {
   let job: SlaCheckJob;
   const prisma = {
@@ -10,6 +26,13 @@ describe('SlaCheckJob', () => {
   const notifications = {
     notify: jest.fn().mockResolvedValue({}),
     notifyByRole: jest.fn().mockResolvedValue([]),
+  };
+  // M4-2: webhook kanal eksternal
+  const webhooks = {
+    slaBreached: jest.fn().mockResolvedValue(undefined),
+    ticketCreated: jest.fn().mockResolvedValue(undefined),
+    ticketAssigned: jest.fn().mockResolvedValue(undefined),
+    ticketStatusChanged: jest.fn().mockResolvedValue(undefined),
   };
   const config = {
     get: jest.fn((key: string) =>
@@ -21,6 +44,7 @@ describe('SlaCheckJob', () => {
     job = new SlaCheckJob(
       prisma as never,
       notifications as never,
+      webhooks as never,
       config as unknown as ConfigService,
     );
   });
