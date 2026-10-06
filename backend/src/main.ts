@@ -1,3 +1,4 @@
+
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import type { INestApplication } from '@nestjs/common';
@@ -7,9 +8,11 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // CORS: izinkan frontend Next.js (dev :3001) memanggil API dari origin berbeda.
-  // Daftar origin dibatasi lewat env CORS_ORIGINS (pisahkan dengan koma).
-  const corsOrigins = (process.env.CORS_ORIGINS ?? 'http://localhost:3001')
+  // CORS: izinkan frontend Next.js mengakses API.
+  // Daftar origin diatur melalui env CORS_ORIGINS.
+  const corsOrigins = (
+    process.env.CORS_ORIGINS ?? 'http://localhost:3001'
+  )
     .split(',')
     .map((origin) => origin.trim())
     .filter(Boolean);
@@ -20,7 +23,7 @@ async function bootstrap() {
     methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
   });
 
-  // Validasi & sanitasi body request (class-validator) untuk semua endpoint
+  // Validasi dan sanitasi body request.
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -32,6 +35,7 @@ async function bootstrap() {
   setupSwagger(app);
 
   const port = Number.parseInt(process.env.PORT ?? '', 10) || 3000;
+
   await app.listen(port);
 }
 
@@ -98,5 +102,4 @@ function setupSwagger(app: INestApplication) {
     },
   });
 }
-
 void bootstrap();
