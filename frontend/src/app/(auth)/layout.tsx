@@ -1,4 +1,5 @@
-import Link from 'next/link';
+import Link from "next/link";
+import { Check } from "lucide-react";
 
 /** Layout halaman autentikasi: form terpusat dengan identitas produk di samping. */
 export default function AuthLayout({
@@ -9,7 +10,16 @@ export default function AuthLayout({
   return (
     <div className="grid min-h-dvh lg:grid-cols-[1fr_minmax(420px,44%)]">
       {/* Panel identitas — disembunyikan di layar kecil agar form dapat ruang. */}
-      <aside className="hidden flex-col justify-between border-r border-sidebar-border bg-sidebar p-10 lg:flex">
+
+      <div
+        className="hidden flex-col justify-between border-r border-sidebar-border bg-sidebar p-10 lg:flex"
+        style={{
+          backgroundImage: "url('background-it-helpdesk.png')",
+          backgroundRepeat: "no-repeat",
+          backgroundPosition: "right bottom",
+          backgroundSize: "100% auto",
+        }}
+      >
         <div className="flex items-center gap-2.5">
           <span className="flex size-8 items-center justify-center rounded-md bg-primary text-sm font-bold text-primary-foreground">
             HD
@@ -32,16 +42,34 @@ export default function AuthLayout({
             diprioritaskan otomatis.
           </p>
           <ul className="space-y-2 pt-2 text-sm text-sidebar-muted">
-            <li className="flex items-start gap-2">
-              <span className="mt-1.5 size-1 shrink-0 rounded-full bg-primary" aria-hidden />
+            <li className="flex items-center gap-2">
+              <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary">
+                <Check
+                  className="size-3 text-primary-foreground"
+                  strokeWidth={2}
+                  aria-hidden
+                />
+              </span>
               Klasifikasi kategori &amp; prioritas otomatis
             </li>
-            <li className="flex items-start gap-2">
-              <span className="mt-1.5 size-1 shrink-0 rounded-full bg-primary" aria-hidden />
+            <li className="flex items-center gap-2">
+              <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary mt-1">
+                <Check
+                  className="size-3 text-primary-foreground"
+                  strokeWidth={2}
+                  aria-hidden
+                />
+              </span>
               Jawaban instan dari basis pengetahuan
             </li>
-            <li className="flex items-start gap-2">
-              <span className="mt-1.5 size-1 shrink-0 rounded-full bg-primary" aria-hidden />
+            <li className="flex items-center gap-2">
+              <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary mt-1">
+                <Check
+                  className="size-3 text-primary-foreground"
+                  strokeWidth={2}
+                  aria-hidden
+                />
+              </span>
               SLA dipantau otomatis oleh sistem
             </li>
           </ul>
@@ -50,7 +78,7 @@ export default function AuthLayout({
         <p className="text-xs text-sidebar-muted">
           Butuh bantuan? Hubungi tim IT internal.
         </p>
-      </aside>
+      </div>
 
       <main className="flex items-center justify-center px-5 py-10 sm:px-8">
         <div className="w-full max-w-sm">
